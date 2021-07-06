@@ -4,13 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Manager
+namespace DatabaseActions
 {
-	namespace Projects
-	{
-		class Project
-		{
-			
-		}
-	}
+    class Action
+    {
+    }
 }
