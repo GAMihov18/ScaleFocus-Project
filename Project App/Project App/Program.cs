@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Collections.Generic;
-
+using Encryption;
 using Manager;
 using Manager.Users;
 using Manager.Teams;
