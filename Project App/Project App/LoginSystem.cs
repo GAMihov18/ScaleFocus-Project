@@ -75,12 +75,14 @@ namespace Manager
 				}
 				
 			}
-
 			public void MainMenu(User currentUser)
             {
 				Console.Clear();
 				Console.Write($"Currently logged in user: {currentUser.FullName}\n\n      Main Menu\n");
-
+                if (currentUser.Roles == 1)
+                {
+					Console.Write("1. User Management View\n2. Teams Management View\n3. Project Management View\n");
+                }
             }  
 			
 		}
