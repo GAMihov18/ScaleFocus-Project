@@ -132,6 +132,10 @@ namespace Manager
 				reader.Close();
 				UserManagementView(currentUser);
 			}
+			public void CreateNewUser(User currentUser)
+            {
+
+            }
 			public void UserManagementView(User currentUser)
 			{
 				Console.Clear();
