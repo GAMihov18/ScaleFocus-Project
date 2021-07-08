@@ -161,6 +161,12 @@ namespace Manager
 				cmd.Parameters.AddWithValue("userId",currentUser.Id);
 				cmd.ExecuteNonQuery();
 			}
+			public void DeleteUser(int id)
+            {
+				SqlCommand cmd = new SqlCommand("DELETE FROM Users WHERE Id = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				cmd.ExecuteNonQuery();
+            }
 			public void UserManagementView(User currentUser)
 			{
 				Console.Clear();
@@ -214,8 +220,8 @@ namespace Manager
 					case ConsoleKey.NumPad3:
 						string userName, Password, FirstName, LastName;
 						string temps;
-
-						Console.Write("Edit an existing user\nEnter ID: "); temp = Console.ReadLine();
+						
+						Console.Write("\nEdit an existing user\nEnter ID: "); temp = Console.ReadLine();
 						Console.Clear();
 						SqlCommand cmd = new SqlCommand("SELECT Username, Password,FirstName,LastName FROM Users WHERE Id = @ID", connection);
 						cmd.Parameters.AddWithValue("@ID", int.Parse(temp));
@@ -264,9 +270,14 @@ namespace Manager
 						}
 						reader.Close();
 						EditUser(currentUser,int.Parse(temp),userName,Password,FirstName,LastName);
+						UserManagementView(currentUser);
 						break;
 					case ConsoleKey.D4:
 					case ConsoleKey.NumPad4:
+						Console.Clear();
+						Console.Write("Delete a user\nEnter ID: ");temps = Console.ReadLine();
+						deleteUser(int.Parse(temps));
+						UserManagementView(currentUser);
 						break;
 					
 					default:
