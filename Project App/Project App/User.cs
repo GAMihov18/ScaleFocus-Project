@@ -46,9 +46,8 @@ namespace Manager
 					editorId = 0;
 				}
 			}
-			public User(int id, string username, string firstName, string lastName, string password, int roles, DateTime creationDate, int creatorId, DateTime lastChangeDate, int lastChangeUserId)
+			public User(string username, string firstName, string lastName, string password, int roles, DateTime creationDate, int creatorId, DateTime lastChangeDate, int lastChangeUserId)
 			{
-				this.id = id;
 				this.username = username;
 				this.firstName = firstName;
 				this.lastName = lastName;
@@ -94,11 +93,12 @@ namespace Manager
 				cmd.Parameters.Add("@editorId", System.Data.SqlDbType.Int);
 				cmd.Parameters["@editorId"].Value = editorId;
 
-				cmd.ExecuteNonQuery();	
+				cmd.ExecuteNonQuery();
 			}
 			public void LoadUser(SqlConnection connection, string username)
 			{
-				SqlCommand cmd = new SqlCommand($"SELECT Id,Username,Password,FirstName,LastName,Roles,CreationDate,CreatorId,LastChangeDate,LastChangeUserId FROM Users WHERE Username  = '{username}'", connection);
+				SqlCommand cmd = new SqlCommand($"SELECT Id,Username,Password,FirstName,LastName,Roles,CreationDate,CreatorId,LastChangeDate,LastChangeUserId FROM Users WHERE Username  = @username", connection);
+				cmd.Parameters.AddWithValue("@username", username);
 				SqlDataReader reader = cmd.ExecuteReader();
 				while (reader.Read())
 				{
