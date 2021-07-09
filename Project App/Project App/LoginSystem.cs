@@ -127,7 +127,7 @@ namespace Manager
 				}
 				catch (System.InvalidOperationException exc)
 				{
-					Console.Write($"Error: {exc.Message}\nReturning to User Management View"); Console.ReadKey();
+					Console.Write($"No User found with given ID\nReturning to User Management View"); Thread.Sleep(1500);
 				}
 				reader.Close();
 				UserManagementView(currentUser);
