@@ -127,7 +127,7 @@ namespace Manager
 				}
 				catch (System.InvalidOperationException exc)
 				{
-					Console.Write($"Error: {exc.Message}\nReturning to User Management View"); Console.ReadKey();
+					Console.Write($"No User found with given ID\nReturning to User Management View"); Thread.Sleep(1500);
 				}
 				reader.Close();
 				UserManagementView(currentUser);
@@ -161,11 +161,15 @@ namespace Manager
 				cmd.Parameters.AddWithValue("userId",currentUser.Id);
 				cmd.ExecuteNonQuery();
 			}
-			public void DeleteUser(int id)
+			public void DeleteUser(int id,User currentUser)
             {
 				SqlCommand cmd = new SqlCommand("DELETE FROM Users WHERE Id = @ID", connection);
 				cmd.Parameters.AddWithValue("@ID", id);
-				cmd.ExecuteNonQuery();
+                if (cmd.ExecuteNonQuery() <= 0)
+                {
+					Console.Write("No user found with given ID.\nReturning to User Management View"); Thread.Sleep(1500);
+					UserManagementView(currentUser);
+				}
             }
 			public void UserManagementView(User currentUser)
 			{
@@ -186,7 +190,7 @@ namespace Manager
 								PrintAllUsers(currentUser);
 								break;
 							case ConsoleKey.D2:
-								Console.Write("Enter ID: "); temp = Console.ReadLine();
+								Console.Write("\nEnter ID: "); temp = Console.ReadLine();
 								printOneUser(temp, currentUser);
 								break;
 							default:
@@ -223,8 +227,23 @@ namespace Manager
 						
 						Console.Write("\nEdit an existing user\nEnter ID: "); temp = Console.ReadLine();
 						Console.Clear();
+						SqlCommand countcmd = new SqlCommand("SELECT count(Username) FROM Users WHERE Id = @ID",connection);
 						SqlCommand cmd = new SqlCommand("SELECT Username, Password,FirstName,LastName FROM Users WHERE Id = @ID", connection);
-						cmd.Parameters.AddWithValue("@ID", int.Parse(temp));
+                        try
+                        {
+							countcmd.Parameters.AddWithValue("@ID", int.Parse(temp));
+							cmd.Parameters.AddWithValue("@ID", int.Parse(temp));
+						}
+                        catch (Exception)
+                        {
+							Console.Write("Please enter a valid ID.\nReturning to User Management View..."); Thread.Sleep(1500);
+							UserManagementView(currentUser);
+                        }
+                        if ((int)countcmd.ExecuteScalar() == 0)
+                        {
+							Console.Write("No user found with given ID.\nReturning to User Management View"); Thread.Sleep(1500);
+							UserManagementView(currentUser);
+                        }
 						SqlDataReader reader = cmd.ExecuteReader();
 						reader.Read();
 						Console.Write("Leave a field blank if you don't wish to edit it\n");Console.ReadLine();
@@ -275,8 +294,18 @@ namespace Manager
 					case ConsoleKey.D4:
 					case ConsoleKey.NumPad4:
 						Console.Clear();
-						Console.Write("Delete a user\nEnter ID: ");temps = Console.ReadLine();
-						deleteUser(int.Parse(temps));
+						Console.Write("Delete a user\nEnter ID: "); temps = Console.ReadLine();
+						try
+                        {
+							DeleteUser(int.Parse(temps),currentUser);
+						}
+                        catch (Exception)
+                        {
+							Console.Write("Please enter a valid ID.\nReturning to User Management View..."); Thread.Sleep(1500);
+							UserManagementView(currentUser);
+                        }
+                        
+						
 						UserManagementView(currentUser);
 						break;
 					
