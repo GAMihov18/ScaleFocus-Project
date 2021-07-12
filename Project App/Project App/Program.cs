@@ -16,14 +16,12 @@ namespace Project_App
 	{
 		static void Main(string[] args)
 		{
-            List<User> users;
 			User admin = new User(true);
 			string connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ProjectDB;Integrated Security=True";
 			SqlConnection connection = new SqlConnection(connectionString);
 			connection.Open();
 			LoginSystem printer = new LoginSystem(connection);
 			printer.MainMenu(printer.PrintLogin());
-			
 			connection.Close();
 		}
 	}
