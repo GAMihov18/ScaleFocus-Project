@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Manager.Users;
+using Manager.Teams;
 
 
 namespace Manager
@@ -92,7 +93,7 @@ namespace Manager
 				Console.ReadKey();
 				UserManagementView(currentUser);
             }
-			public void printOneUser(string id, User currentUser)
+			public void PrintOneUser(string id, User currentUser)
             {
 				int numid;
 				Console.Clear();
@@ -125,7 +126,7 @@ namespace Manager
 					reader.Close();
 					Console.ReadKey();
 				}
-				catch (System.InvalidOperationException exc)
+				catch (System.InvalidOperationException)
 				{
 					Console.Write($"No User found with given ID\nReturning to User Management View"); Thread.Sleep(1500);
 				}
@@ -173,11 +174,9 @@ namespace Manager
             }
 			public void UserManagementView(User currentUser)
 			{
-				Console.Clear();
 				Console.Write($"Currently logged in user: { currentUser.FullName}\n\n     User Management View\n");
 				Console.Write("1. List Users\n2. Create new user\n3. Edit existing user\n4. Delete an existing user\n:");
 				string temp;
-				string tempStr;
 				switch (Console.ReadKey().Key)
                 {
 					case ConsoleKey.D1:
@@ -191,7 +190,7 @@ namespace Manager
 								break;
 							case ConsoleKey.D2:
 								Console.Write("\nEnter ID: "); temp = Console.ReadLine();
-								printOneUser(temp, currentUser);
+								PrintOneUser(temp, currentUser);
 								break;
 							default:
 								Console.Write("Invalid input.\nGoing back to User Management View"); Thread.Sleep(1500);
@@ -315,6 +314,172 @@ namespace Manager
                 }
 
             }
+			public void PrintAllTeams(User currentUser)
+            {
+				SqlCommand cmd = new SqlCommand("SELECT Id,Title,CreationDate,CreatedBy,LastChangeDate,LastEditedBy FROM vTeams", connection);
+				SqlDataReader reader = cmd.ExecuteReader();
+				Console.Clear();
+				while (reader.Read())
+                {
+					Console.Write($"--------------------\nID: {reader.GetInt32(0)}\nTitle: {reader.GetString(1)}\nCreated on: {reader.GetDateTime(2)}\nCreated by: {reader.GetString(3)}\nLast edited on: {reader.GetDateTime(4)}\nLast edited by: {reader.GetString(5)}\n");
+				}
+				Console.ReadKey();
+            }
+			public void PrintOneTeam(User currentUser,int id)
+            {
+				Console.Clear();
+				SqlCommand cmd = new SqlCommand("SELECT Id,Title,CreationDate,CreatedBy,LastChangeDate,LastEditedBy FROM vTeams WHERE Id = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				SqlDataReader reader;
+				reader = cmd.ExecuteReader();
+				Console.Clear();
+				try
+				{
+					reader.Read();
+					if (reader.FieldCount <= 0)
+					{
+						System.InvalidOperationException exc = new System.InvalidOperationException("Invalid ID");
+						throw exc;
+					}
+					
+					Console.Write($"--------------------\nID: {reader.GetInt32(0)}\nTitle: {reader.GetString(1)}\nCreated on: {reader.GetDateTime(2)}\nCreated by: {reader.GetString(3)}\nLast edited on: {reader.GetDateTime(4)}\nLast edited by: {reader.GetString(5)}\n");
+					reader.Close();
+					Console.ReadKey();
+				}
+				catch (System.InvalidOperationException)
+				{
+					Console.Write($"No team found with given ID\nReturning to Team Management View"); Thread.Sleep(1500);
+				}
+				Console.Clear();
+				reader.Close();
+				TeamManagementView(currentUser);
+			}
+			public void CreateNewTeam(Team team)
+            {
+				team.SaveTeam();
+            }
+			public void prepareNewTeam(User currentUser,string title)
+            {
+				Team team = new Team(title, connection);
+				team.CreationDate = DateTime.Now;
+				team.LastChangeDate = DateTime.Now;
+				team.CreatorId = currentUser.Id;
+				team.LastChangeUserId = currentUser.Id;
+				CreateNewTeam(team);
+            }
+			public void EditTeam(User currentUser,int id,string title)
+            {
+				DateTime editTime = DateTime.Now;
+
+				SqlCommand cmd = new SqlCommand("UPDATE Teams SET Title = @title, LastChangeDate = @edittime , LastChangeUserId = @userId WHERE Id = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				cmd.Parameters.AddWithValue("@title", title);
+				cmd.Parameters.AddWithValue("@edittime", editTime);
+				cmd.Parameters.AddWithValue("@userId", currentUser.Id);
+				cmd.ExecuteNonQuery();
+			}
+			public void DeleteTeam(int id,User currentUser)
+            {
+				SqlCommand cmd = new SqlCommand("DELETE FROM Teams WHERE Id = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				if (cmd.ExecuteNonQuery() <= 0)
+				{
+					Console.Write("No team found with given ID.\nReturning to Team Management View"); Thread.Sleep(1500);
+					TeamManagementView(currentUser);
+				}
+			}
+			public void TeamManagementView(User currentUser)
+            {
+				Console.Write($"Currently logged in user: { currentUser.FullName}\n\n     Team Management View\n");
+				Console.Write("1. List Teams\n2. Create new team\n3. Edit existing team\n4. Delete an existing team\n:");
+				string temp,temps;
+                switch (Console.ReadKey().Key)
+                {
+					case ConsoleKey.D1:
+					case ConsoleKey.NumPad1:
+						Console.Clear();
+						Console.Write("1. List all teams\n2. List one team");
+                        switch (Console.ReadKey().Key)
+                        {
+							case ConsoleKey.D1:
+							case ConsoleKey.NumPad1:
+								Console.Clear();
+								PrintAllTeams(currentUser);
+								break;
+							case ConsoleKey.D2:
+							case ConsoleKey.NumPad2:
+								Console.Clear();
+								Console.Write("Enter ID: "); temp = Console.ReadLine();
+                                try
+                                {
+									PrintOneTeam(currentUser,int.Parse(temp));
+
+								}
+                                catch (FormatException)
+                                {
+									Console.Clear();
+									Console.Write("Please, enter a valid ID.\nReturning to Team Management View");
+									TeamManagementView(currentUser);
+                                }
+								
+								break;
+
+                            default:
+								Console.Clear();
+								Console.Write("Incorrect input.\nReturning to Team Management View");
+								TeamManagementView(currentUser);
+								break;
+                        }
+                        break;
+					case ConsoleKey.D2:
+					case ConsoleKey.NumPad2:
+						Console.Clear();
+						Console.Write("Creating new team\nEnter team name: ");temp = Console.ReadLine();
+						prepareNewTeam(currentUser, temp);
+						break;
+					case ConsoleKey.D3:
+					case ConsoleKey.NumPad3:
+						SqlCommand countcmd = new SqlCommand("SELECT count(Username) FROM Users WHERE Id = @ID", connection);
+						Console.Write("\nEdit an existing user\nEnter ID: "); temp = Console.ReadLine();
+						Console.Clear();
+						
+						try
+						{
+							countcmd.Parameters.AddWithValue("@ID", int.Parse(temp));
+						}
+						catch (Exception)
+						{
+							Console.Write("Please enter a valid ID.\nReturning to User Management View..."); Thread.Sleep(1500);
+							UserManagementView(currentUser);
+						}
+
+						if ((int)countcmd.ExecuteScalar() == 0)
+						{
+							Console.Write("No user found with given ID.\nReturning to User Management View"); Thread.Sleep(1500);
+							UserManagementView(currentUser);
+						}
+						Console.Write("Title: "); temps = Console.ReadLine();
+						EditTeam(currentUser,int.Parse(temp),temps);
+						break;
+					case ConsoleKey.D4:
+					case ConsoleKey.NumPad4:
+						Console.Clear();
+						Console.Write("Deleting a user\nEnter ID: ");temp = Console.ReadLine();
+                        try
+                        {
+							DeleteTeam(int.Parse(temp),currentUser);
+						}
+                        catch (Exception)
+                        {
+							Console.Write("Please enter a valid ID\nReturning to Team Management View");
+                        }
+						Console.Clear();
+						TeamManagementView(currentUser);
+						break;
+					default:
+						break;
+                }
+            }
 			public void MainMenu(User currentUser)
 			{
 				Console.Clear();
@@ -365,7 +530,7 @@ namespace Manager
 						if (currentUser.Roles == 1)
 						{
 							Console.Clear();
-							Console.Write("Team Management View"); Thread.Sleep(1000);
+							TeamManagementView(currentUser);
 						}
                         else
                         {
