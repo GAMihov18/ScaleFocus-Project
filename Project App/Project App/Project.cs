@@ -55,6 +55,7 @@ namespace Manager
 			/// </summary>
 			/// <returns><see cref="int"/> representing the ID of the last editor</returns>
 			public int LastChangeUserId { get { return lastChangeUserId; } set { lastChangeUserId = value; } }
+			public Team Team { get { return team; } set { team = value; } }
 			/// <summary>
 			/// Saves a project to a database
 			/// </summary>
@@ -73,7 +74,7 @@ namespace Manager
 			/// Loads a team into the current instance
 			/// </summary>
 			/// <param name="id">ID of team you want to load</param>
-			public void LoadTeam(int id)
+			public void LoadProject(int id)
 			{
 				SqlCommand cmd = new SqlCommand("SELECT Id,Title, Description,CreationDate,CreatorId,LastChangeDate,LastChangeUserId FROM Projects WHERE Id = @ID", connection);
 				cmd.Parameters.AddWithValue("@ID", id);
@@ -90,6 +91,13 @@ namespace Manager
 				}
 				reader.Close();
 			}
+			public void AssignTeam(Team team)
+            {
+				SqlCommand cmd = new SqlCommand("UPDATE Projects SET TeamId = @teamid WHERE Id = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID",id);
+				cmd.Parameters.AddWithValue("teamid", team.Id);
+            }
+
 
 			private int id;
 			private string title;
@@ -98,7 +106,7 @@ namespace Manager
 			private int creatorId;
 			private DateTime lastChangeDate;
 			private int lastChangeUserId;
-			Team team;
+			private Team team = null;
 		}
 	}
 }

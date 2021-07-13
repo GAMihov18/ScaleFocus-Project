@@ -615,8 +615,8 @@ namespace Manager
 			{
 				Console.Clear();
 				Console.Write($"Currently logged in user: { currentUser.FullName}\n\n     Project Management View\n");
-				Console.Write("1. List Projects\n2. Create new project\n3. Edit existing project\n4. Delete an existing project\n:");
-				string temp, temps;
+				Console.Write("1. List Projects\n2. Create new project\n3. Edit existing project\n4. Delete an existing project\n5. Assign team to projects owned by me\n:");
+				string temp;
 				Project project;
 				switch (Console.ReadKey().Key)
 				{
@@ -720,6 +720,21 @@ namespace Manager
 						Console.Clear();
 						ProjectManagementView(currentUser);
 						break;
+					case ConsoleKey.D5:
+					case ConsoleKey.NumPad5:
+						Console.Clear();
+						Console.Write("Assign team to project I own");
+						Console.Write("ID of project: "); temp = Console.ReadLine();
+
+						project = new Project(connection);
+						project.LoadProject(int.Parse(temp));
+						Console.Write("ID of team: "); temp = Console.ReadLine();
+						Team team = new Team(connection);
+						team.LoadTeam(int.Parse(temp));
+						project.AssignTeam(team);
+						EditProject(currentUser, project.Id, project);
+						break;
+
 					default:
 						break;
 				}
