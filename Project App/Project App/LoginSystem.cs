@@ -15,16 +15,23 @@ namespace Manager
 {
 	namespace Login
 	{
-        
 		class LoginSystem
 		{
 			public SqlConnection connection;
-
+			/// <summary>
+			/// Builds the login system with a connection
+			/// </summary>
+			/// <param name="connection"></param>
 			public LoginSystem(SqlConnection connection)
             {
 				this.connection = connection;
             }
-
+			/// <summary>
+			/// Checks if your credentials for logging in are correct
+			/// </summary>
+			/// <param name="username">Your username</param>
+			/// <param name="pass">Your password</param>
+			/// <returns></returns>
 			public bool CheckLogin(string username, string pass)
 			{
 				SqlDataReader reader;
@@ -67,6 +74,10 @@ namespace Manager
 				reader.Close();
 				return false;
 			}
+			/// <summary>
+			/// Prints the login menu and returns the logged in user
+			/// </summary>
+			/// <returns><see cref="User"/></returns>
 			public User PrintLogin()
 			{
 				string tempname, temppass;
@@ -80,6 +91,10 @@ namespace Manager
 				user.LoadUser(tempname, connection);
 				return user;
 			}
+			/// <summary>
+			/// Prints all the users
+			/// </summary>
+			/// <param name="currentUser">The user that currrently is logged in</param>
 			public void PrintAllUsers(User currentUser)
             {
 				Console.Clear();
@@ -94,6 +109,11 @@ namespace Manager
 				Console.ReadKey();
 				UserManagementView(currentUser);
             }
+			/// <summary>
+			/// Prints one user with given ID
+			/// </summary>
+			/// <param name="id">ID of user you want to print</param>
+			/// <param name="currentUser">the currently logged in user</param>
 			public void PrintOneUser(string id, User currentUser)
             {
 				int numid;
@@ -134,10 +154,23 @@ namespace Manager
 				reader.Close();
 				UserManagementView(currentUser);
 			}
+			/// <summary>
+			/// Calls <see cref="User.SaveUser(SqlConnection)"/>
+			/// </summary>
+			/// <param name="user">The <see cref="User"/> you want to save</param>
 			public void CreateNewUser(User user)
             {
 				user.SaveUser(connection);
             }
+			/// <summary>
+			/// Prepares the user to be saved and calls <see cref="LoginSystem.CreateNewUser(User)"/>
+			/// </summary>
+			/// <param name="currentUser">The currently logged in user</param>
+			/// <param name="username">The username of the new user you want to create</param>
+			/// <param name="password">The password of the new user you want to create</param>
+			/// <param name="firstName">The first name of the new user you want to create</param>
+			/// <param name="lastName">The last name of the new user you want to create</param>
+			/// <param name="roles">The roles of the new user you want to create</param>
 			public void PrepareUser(User currentUser,string username,string password, string firstName,string lastName,int roles)
             {
 				int  creatorId, lastChangeUserId;
@@ -149,6 +182,15 @@ namespace Manager
 				User user = new User(username, firstName, lastName, password, roles, creationDate, creatorId, editDate, lastChangeUserId);
 				CreateNewUser(user);
 			}
+			/// <summary>
+			/// Edits an existing user
+			/// </summary>
+			/// <param name="currentUser">The currently logged in user</param>
+			/// <param name="id">ID of user you want to edit</param>
+			/// <param name="username">The new username given to the user you want to edit</param>
+			/// <param name="password">The new password given to the user you want to edit</param>
+			/// <param name="firstName">The new first name given to the user you want to edit</param>
+			/// <param name="lastName">The new last name given to the user you want to edit</param>
 			public void EditUser(User currentUser,int id,string username,string password, string firstName,string lastName)
             {
 				DateTime editTime = DateTime.Now;
@@ -163,6 +205,11 @@ namespace Manager
 				cmd.Parameters.AddWithValue("userId",currentUser.Id);
 				cmd.ExecuteNonQuery();
 			}
+			/// <summary>
+			/// Deletes an existing user
+			/// </summary>
+			/// <param name="id">The ID of the user you want to delete</param>
+			/// <param name="currentUser">The currently logged in user</param>
 			public void DeleteUser(int id,User currentUser)
             {
 				SqlCommand cmd = new SqlCommand("DELETE FROM Users WHERE Id = @ID", connection);
@@ -174,6 +221,10 @@ namespace Manager
 				}
 				Console.Clear();
             }
+			/// <summary>
+			/// Prints the user management view
+			/// </summary>
+			/// <param name="currentUser">The currently logged in user</param>
 			public void UserManagementView(User currentUser)
 			{
 				Console.Clear();
