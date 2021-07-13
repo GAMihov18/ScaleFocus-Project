@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Manager.Users;
 using Manager.Teams;
+using Manager.Projects;
 
 
 namespace Manager
@@ -17,7 +18,7 @@ namespace Manager
         
 		class LoginSystem
 		{
-			private SqlConnection connection;
+			public SqlConnection connection;
 
 			public LoginSystem(SqlConnection connection)
             {
@@ -76,7 +77,7 @@ namespace Manager
 					Console.Write("Password: "); temppass = Console.ReadLine();
 					Console.Clear();
 				} while (!CheckLogin(tempname, temppass));
-				user.LoadUser(connection,tempname);
+				user.LoadUser(tempname, connection);
 				return user;
 			}
 			public void PrintAllUsers(User currentUser)
@@ -171,9 +172,11 @@ namespace Manager
 					Console.Write("No user found with given ID.\nReturning to User Management View"); Thread.Sleep(1500);
 					UserManagementView(currentUser);
 				}
+				Console.Clear();
             }
 			public void UserManagementView(User currentUser)
 			{
+				Console.Clear();
 				Console.Write($"Currently logged in user: { currentUser.FullName}\n\n     User Management View\n");
 				Console.Write("1. List Users\n2. Create new user\n3. Edit existing user\n4. Delete an existing user\n:");
 				string temp;
@@ -323,6 +326,7 @@ namespace Manager
                 {
 					Console.Write($"--------------------\nID: {reader.GetInt32(0)}\nTitle: {reader.GetString(1)}\nCreated on: {reader.GetDateTime(2)}\nCreated by: {reader.GetString(3)}\nLast edited on: {reader.GetDateTime(4)}\nLast edited by: {reader.GetString(5)}\n");
 				}
+				reader.Close();
 				Console.ReadKey();
             }
 			public void PrintOneTeam(User currentUser,int id)
@@ -390,6 +394,7 @@ namespace Manager
 			}
 			public void TeamManagementView(User currentUser)
             {
+				Console.Clear();
 				Console.Write($"Currently logged in user: { currentUser.FullName}\n\n     Team Management View\n");
 				Console.Write("1. List Teams\n2. Create new team\n3. Edit existing team\n4. Delete an existing team\n:");
 				string temp,temps;
@@ -439,7 +444,7 @@ namespace Manager
 						break;
 					case ConsoleKey.D3:
 					case ConsoleKey.NumPad3:
-						SqlCommand countcmd = new SqlCommand("SELECT count(Username) FROM Users WHERE Id = @ID", connection);
+						SqlCommand countcmd = new SqlCommand("SELECT count(Title) FROM Teams WHERE Id = @ID", connection);
 						Console.Write("\nEdit an existing user\nEnter ID: "); temp = Console.ReadLine();
 						Console.Clear();
 						
@@ -449,14 +454,14 @@ namespace Manager
 						}
 						catch (Exception)
 						{
-							Console.Write("Please enter a valid ID.\nReturning to User Management View..."); Thread.Sleep(1500);
-							UserManagementView(currentUser);
+							Console.Write("Please enter a valid ID.\nReturning to Team Management View..."); Thread.Sleep(1500);
+							TeamManagementView(currentUser);
 						}
 
 						if ((int)countcmd.ExecuteScalar() == 0)
 						{
-							Console.Write("No user found with given ID.\nReturning to User Management View"); Thread.Sleep(1500);
-							UserManagementView(currentUser);
+							Console.Write("No user found with given ID.\nReturning to Team Management View"); Thread.Sleep(1500);
+							TeamManagementView(currentUser);
 						}
 						Console.Write("Title: "); temps = Console.ReadLine();
 						EditTeam(currentUser,int.Parse(temp),temps);
@@ -464,7 +469,7 @@ namespace Manager
 					case ConsoleKey.D4:
 					case ConsoleKey.NumPad4:
 						Console.Clear();
-						Console.Write("Deleting a user\nEnter ID: ");temp = Console.ReadLine();
+						Console.Write("Deleting a team\nEnter ID: ");temp = Console.ReadLine();
                         try
                         {
 							DeleteTeam(int.Parse(temp),currentUser);
@@ -480,6 +485,198 @@ namespace Manager
 						break;
                 }
             }
+			public void PrintAllProjects(User currentUser)
+			{
+				SqlCommand cmd = new SqlCommand("SELECT Id,Title,Description,CreationDate,CreatedBy,LastChangeDate,LastEditedBy, TeamName FROM vProjects", connection);
+				SqlDataReader reader = cmd.ExecuteReader();
+				Console.Clear();
+				while (reader.Read())
+				{
+					Console.Write($"--------------------\nID: {reader.GetInt32(0)}\nTitle: {reader.GetString(1)}\nDescription: {reader.GetString(2)}\nCreated on: {reader.GetDateTime(3)}\nCreated by: {reader.GetString(4)}\nLast edited on: {reader.GetDateTime(5)}\nLast edited by: {reader.GetString(6)}\n");
+				}
+				reader.Close();
+				Console.ReadKey();
+			}
+			public void PrintOneProject(User currentUser, int id)
+			{
+				Console.Clear();
+				SqlCommand cmd = new SqlCommand("SELECT Id,Title,Description,CreationDate,CreatedBy,LastChangeDate,LastEditedBy, TeamName FROM vProjects WHERE Id = @ID", connection);  
+				cmd.Parameters.AddWithValue("@ID", id);
+				SqlDataReader reader;
+				reader = cmd.ExecuteReader();
+				Console.Clear();
+				try
+				{
+					reader.Read();
+					if (reader.FieldCount <= 0)
+					{
+						System.InvalidOperationException exc = new System.InvalidOperationException("Invalid ID");
+						throw exc;
+					}
+
+					Console.Write($"--------------------\nID: {reader.GetInt32(0)}\nTitle: {reader.GetString(1)}\nDescription: {reader.GetString(2)}\nCreated on: {reader.GetDateTime(3)}\nCreated by: {reader.GetString(4)}\nLast edited on: {reader.GetDateTime(5)}\nLast edited by: {reader.GetString(6)}\n");
+					reader.Close();
+					Console.ReadKey();
+				}
+				catch (System.InvalidOperationException)
+				{
+					Console.Write($"No project found with given ID\nReturning to Project Management View"); Thread.Sleep(1500);
+				}
+				Console.Clear();
+				reader.Close();
+				ProjectManagementView(currentUser);
+			}
+			public void CreateNewProject(Project project)
+			{
+				project.SaveProject();
+			}
+			public void PrepareNewProject(User currentUser, Project project)
+			{
+				project.CreationDate = DateTime.Now;
+				project.LastChangeDate = DateTime.Now;
+				project.CreatorId = currentUser.Id;
+				project.LastChangeUserId = currentUser.Id;
+				CreateNewProject(project);
+			}
+			public void EditProject(User currentUser, int id, Project project)
+			{
+				DateTime editTime = DateTime.Now;
+
+				SqlCommand cmd = new SqlCommand("UPDATE Projects SET Title = @title, Description = @desc, LastChangeDate = @edittime, LastChangeUserId = @userId WHERE Id = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				cmd.Parameters.AddWithValue("@title", project.Title);
+				cmd.Parameters.AddWithValue("@desc", project.Description);
+				cmd.Parameters.AddWithValue("@edittime", editTime);
+				cmd.Parameters.AddWithValue("@userId", currentUser.Id);
+				cmd.ExecuteNonQuery();
+			}
+			public void DeleteProject(int id, User currentUser)
+			{
+				SqlCommand cmd = new SqlCommand("DELETE FROM Projects WHERE Id = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				if (cmd.ExecuteNonQuery() <= 0)
+				{
+					Console.Write("No project found with given ID.\nReturning to Project Management View"); Thread.Sleep(1500);
+					TeamManagementView(currentUser);
+				}
+			}
+			public void ProjectManagementView(User currentUser)
+			{
+				Console.Clear();
+				Console.Write($"Currently logged in user: { currentUser.FullName}\n\n     Project Management View\n");
+				Console.Write("1. List Projects\n2. Create new project\n3. Edit existing project\n4. Delete an existing project\n:");
+				string temp, temps;
+				Project project;
+				switch (Console.ReadKey().Key)
+				{
+					case ConsoleKey.D1:
+					case ConsoleKey.NumPad1:
+						Console.Clear();
+						Console.Write("1. List all projects\n2. List one project");
+						switch (Console.ReadKey().Key)
+						{
+							case ConsoleKey.D1:
+							case ConsoleKey.NumPad1:
+								Console.Clear();
+								PrintAllProjects(currentUser);
+								break;
+							case ConsoleKey.D2:
+							case ConsoleKey.NumPad2:
+								Console.Clear();
+								Console.Write("Enter ID: "); temp = Console.ReadLine();
+								try
+								{
+									PrintOneProject(currentUser, int.Parse(temp));
+
+								}
+								catch (FormatException)
+								{
+									Console.Clear();
+									Console.Write("Please, enter a valid ID.\nReturning to Project Management View");
+									ProjectManagementView(currentUser);
+								}
+
+								break;
+
+							default:
+								Console.Clear();
+								Console.Write("Incorrect input.\nReturning to Project Management View");
+								ProjectManagementView(currentUser);
+								break;
+						}
+						break;
+					case ConsoleKey.D2:
+					case ConsoleKey.NumPad2:
+						Console.Clear();
+						project = new Project(connection);
+						Console.Write("Creating new project\nEnter project name: "); project.Title = Console.ReadLine();
+						Console.Write("Enter project description: "); project.Description = Console.ReadLine();
+						PrepareNewProject(currentUser, project);
+						break;
+					case ConsoleKey.D3:
+					case ConsoleKey.NumPad3:
+						SqlCommand countcmd = new SqlCommand("SELECT count(Title) FROM Projects WHERE Id = @ID", connection);
+						Console.Write("\nEdit an existing project\nEnter ID: "); temp = Console.ReadLine();
+						Console.Clear();
+
+						try
+						{
+							countcmd.Parameters.AddWithValue("@ID", int.Parse(temp));
+						}
+						catch (Exception)
+						{
+							Console.Write("Please enter a valid ID.\nReturning to Project Management View..."); Thread.Sleep(1500);
+							ProjectManagementView(currentUser);
+						}
+
+						if ((int)countcmd.ExecuteScalar() == 0)
+						{
+							Console.Write("No project found with given ID.\nReturning to Project Management View"); Thread.Sleep(1500);
+							ProjectManagementView(currentUser);
+						}
+						project = new Project(connection);
+						SqlCommand cmd = new SqlCommand("SELECT Title,Description FROM Projects WHERE Id = @ID", connection);
+						cmd.Parameters.AddWithValue("@ID", int.Parse(temp));
+						SqlDataReader reader = cmd.ExecuteReader();
+						reader.Read();
+						Console.Write("Leave a field blank if you don't wish to edit it\n"); Console.ReadLine();
+						Console.Write("Title: "); project.Title = Console.ReadLine();
+                        if (project.Title == "")
+                        {
+							project.Title = reader.GetString(0);
+
+                        }
+						Console.Write("Description: "); project.Description = Console.ReadLine();
+                        if (project.Description == "")
+                        {
+							project.Description = reader.GetString(1);
+                        }
+						reader.Close();
+						EditProject(currentUser, int.Parse(temp), project);
+						break;
+					case ConsoleKey.D4:
+					case ConsoleKey.NumPad4:
+						Console.Clear();
+						Console.Write("Deleting a Project\nEnter ID: "); temp = Console.ReadLine();
+						try
+						{
+							DeleteProject(int.Parse(temp), currentUser);
+						}
+						catch (Exception)
+						{
+							Console.Write("Please enter a valid ID\nReturning to Project Management View");
+						}
+						Console.Clear();
+						ProjectManagementView(currentUser);
+						break;
+					default:
+						break;
+				}
+			}
+			/// <summary>
+			/// Prints the main menu and provides with input
+			/// </summary>
+			/// <param name="currentUser">Represents the currently logged in user</param>
 			public void MainMenu(User currentUser)
 			{
 				Console.Clear();
@@ -544,7 +741,7 @@ namespace Manager
 						if (currentUser.Roles == 1)
 						{
 							Console.Clear();
-							Console.Write("Project Management View"); Thread.Sleep(1000);
+							ProjectManagementView(currentUser);
                         }
                         else
                         {
