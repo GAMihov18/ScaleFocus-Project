@@ -732,7 +732,6 @@ namespace Manager
 						Team team = new Team(connection);
 						team.LoadTeam(int.Parse(temp));
 						project.AssignTeam(team);
-						EditProject(currentUser, project.Id, project);
 						break;
 
 					default:

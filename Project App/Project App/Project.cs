@@ -96,6 +96,7 @@ namespace Manager
 				SqlCommand cmd = new SqlCommand("UPDATE Projects SET TeamId = @teamid WHERE Id = @ID", connection);
 				cmd.Parameters.AddWithValue("@ID",id);
 				cmd.Parameters.AddWithValue("teamid", team.Id);
+				cmd.ExecuteNonQuery();
             }
 
 
