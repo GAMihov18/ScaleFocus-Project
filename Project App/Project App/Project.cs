@@ -17,9 +17,9 @@ namespace Manager
 			/// </summary>
 			/// <param name="connection"><see cref="SqlConnection"/> with loaded connectionString</param>
 			public Project(SqlConnection connection)
-            {
+			{
 				this.connection = connection;
-            }
+			}
 			/// <summary>
 			/// Gets/sets the ID of the project
 			/// </summary>
@@ -60,7 +60,7 @@ namespace Manager
 			/// Saves a project to a database
 			/// </summary>
 			public void SaveProject()
-            {
+			{
 				SqlCommand cmd = new SqlCommand("INSERT INTO Projects(Title,Description,CreationDate,CreatorId,LastChangeDate, LastChangeUserId) VALUES(@title,@desc,@creationdate,@creatorid,@lastchangedate,@lastchangeuserid)", connection);
 				cmd.Parameters.AddWithValue("@title", title);
 				cmd.Parameters.AddWithValue("@desc", description);
@@ -92,12 +92,12 @@ namespace Manager
 				reader.Close();
 			}
 			public void AssignTeam(Team team)
-            {
+			{
 				SqlCommand cmd = new SqlCommand("INSERT INTO TeamsProjects(TeamId, ProjectId) VALUES(@teamid,@projectid)", connection);
 				cmd.Parameters.AddWithValue("@teamid",team.Id);
 				cmd.Parameters.AddWithValue("@projectid", id);
 				cmd.ExecuteNonQuery();
-            }
+			}
 
 
 			private int id;
