@@ -824,7 +824,6 @@ namespace Manager
 						break;
 				}
 			}
-
 			public void PrintUserTeams(User currentUser, int id)
 			{
 				Console.Clear();
@@ -837,9 +836,6 @@ namespace Manager
 				}
 				reader.Close();
 			}
-
-			
-
 			public void MyTeams(User currentUser)
 			{
 				Console.Clear();
@@ -877,7 +873,6 @@ namespace Manager
 						break;
 				}
 			}
-
 			public void PrintUserProjects(User currentUser, int id)
 			{
 				Console.Clear();
@@ -890,7 +885,6 @@ namespace Manager
 				}
 				reader.Close();
 			}
-
 			public void MyProjects(User currentUser)
 			{
 				Console.Clear();
@@ -928,7 +922,6 @@ namespace Manager
 						break;
 				}
 			}
-
 			/// <summary>
 			/// Prints the main menu and provides with input
 			/// </summary>
