@@ -723,21 +723,149 @@ namespace Manager
 					case ConsoleKey.D5:
 					case ConsoleKey.NumPad5:
 						Console.Clear();
-						Console.Write("Assign team to project I own");
+						Console.Write("Assign team to project I own\n");
 						Console.Write("ID of project: "); temp = Console.ReadLine();
 
 						project = new Project(connection);
 						project.LoadProject(int.Parse(temp));
-						Console.Write("ID of team: "); temp = Console.ReadLine();
-						Team team = new Team(connection);
-						team.LoadTeam(int.Parse(temp));
-						project.AssignTeam(team);
+						try
+						{
+							if (project.CreatorId == currentUser.Id)
+							{
+								Console.Write("ID of team: "); temp = Console.ReadLine();
+								Team team = new Team(connection);
+								team.LoadTeam(int.Parse(temp));
+								project.AssignTeam(team);
+							}
+							else
+							{
+								throw new InvalidOperationException("You don't own this project");
+							}
+						}
+						catch (InvalidOperationException exc)
+						{
+							Console.Clear();
+							Console.Write(exc.Message);
+						}
+						catch (FormatException)
+						{
+							Console.Clear();
+							Console.Write("Enter valid ID");
+						}
+						finally
+						{
+							ProjectManagementView(currentUser);
+						}
 						break;
-
 					default:
 						break;
 				}
 			}
+
+			public void PrintUserTeams(User currentUser, int id)
+            {
+				Console.Clear();
+				SqlCommand cmd = new SqlCommand("SELECT * FROM vTeams WHERE CreatorId = @ID",connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				SqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+					Console.Write($"--------------------\nID: {reader.GetInt32(0)}\nTitle: {reader.GetString(1)}\nCreated on: {reader.GetDateTime(2)}\nCreated by: {reader.GetString(4)}\nLast edited on: {reader.GetDateTime(5)}\nLast edited by: {reader.GetString(7)}\n");
+				}
+				reader.Close();
+            }
+
+			
+
+			public void MyTeams(User currentUser)
+            {
+				Console.Clear();
+				Console.Write($"Currently logged in user: {currentUser.FullName}\n\n      My teams\n");
+				Console.Write("1. List my teams\n2. Add people to my teams\n3. Edit my teams\n4.Delete my teams");
+                switch (Console.ReadKey().Key)
+                {
+					case ConsoleKey.D1:
+					case ConsoleKey.NumPad1:
+						Console.Clear();
+						PrintUserTeams(currentUser, currentUser.Id);
+						Console.ReadKey();
+						MyTeams(currentUser);
+						break;
+					case ConsoleKey.D2:
+					case ConsoleKey.NumPad2:
+						Console.Clear();
+						Console.Write("Add people to my teams"); Thread.Sleep(1000);
+						MyTeams(currentUser);
+						break;
+					case ConsoleKey.D3:
+					case ConsoleKey.NumPad3:
+						Console.Clear();
+						Console.Write("Edit my teams"); Thread.Sleep(1000);
+						MyTeams(currentUser);
+						break;
+					case ConsoleKey.D4:
+					case ConsoleKey.NumPad4:
+						Console.Clear();
+						Console.Write("Delete my teams"); Thread.Sleep(1000);
+						MyTeams(currentUser);
+						break;
+					default:
+						MainMenu(currentUser);
+                        break;
+                }
+            }
+
+			public void PrintUserProjects(User currentUser, int id)
+			{
+				Console.Clear();
+				SqlCommand cmd = new SqlCommand("SELECT * FROM vProjects WHERE CreatorId = @ID", connection);
+				cmd.Parameters.AddWithValue("@ID", id);
+				SqlDataReader reader = cmd.ExecuteReader();
+				while (reader.Read())
+				{
+					Console.Write($"--------------------\nID: {reader.GetInt32(0)}\nTitle: {reader.GetString(1)}\nDescription: {reader.GetString(2)}\nCreated on: {reader.GetDateTime(3)}\nCreated by: {reader.GetString(5)}\nLast edited on: {reader.GetDateTime(6)}\nLast edited by: {reader.GetString(8)}\n");
+				}
+				reader.Close();
+			}
+
+			public void MyProjects(User currentUser)
+            {
+				Console.Clear();
+				Console.Write($"Currently logged in user: {currentUser.FullName}\n\n      My Projects\n");
+				Console.Write("1. List my projects\n2. Add people to my projects\n3. Edit my teams\n4.Delete my projects");
+				switch (Console.ReadKey().Key)
+				{
+					case ConsoleKey.D1:
+					case ConsoleKey.NumPad1:
+						Console.Clear();
+						PrintUserProjects(currentUser, currentUser.Id);
+						Console.ReadKey();
+						MyProjects(currentUser);
+						break;
+					case ConsoleKey.D2:
+					case ConsoleKey.NumPad2:
+						Console.Clear();
+						Console.Write("Add people to my projects"); Thread.Sleep(1000);
+						MyProjects(currentUser);
+						break;
+					case ConsoleKey.D3:
+					case ConsoleKey.NumPad3:
+						Console.Clear();
+						Console.Write("Edit my projects"); Thread.Sleep(1000);
+						MyProjects(currentUser);
+						break;
+					case ConsoleKey.D4:
+					case ConsoleKey.NumPad4:
+						Console.Clear(); 
+						Console.Write("Delete my projects"); Thread.Sleep(1000);
+						MyProjects(currentUser);
+						break;
+					default:
+						MainMenu(currentUser);
+						break;
+				}
+			}
+
 			/// <summary>
 			/// Prints the main menu and provides with input
 			/// </summary>
@@ -746,35 +874,40 @@ namespace Manager
 			{
 				Console.Clear();
 				Console.Write($"Currently logged in user: {currentUser.FullName}\n\n      Main Menu\n");
-				Console.Write("1. My Projects\n2. My Tasks\n3. My worklog\n");
+				Console.Write("1. My Teams\n2. My Projects\n3. My Tasks\n4. My worklog\n");
 				
 				if (currentUser.Roles == 1)
                 {
-					Console.Write("4. User Management View\n5. Teams Management View\n6. Project Management View\n");
+					Console.Write("5. User Management View\n6. Teams Management View\n7. Project Management View\n");
                 }
 				Console.Write("Esc. Exit\n:");
                 switch (Console.ReadKey().Key)
                 {
 					case ConsoleKey.D1:
 					case ConsoleKey.NumPad1:
-						Console.Clear();
-						Console.Write("My projects"); Thread.Sleep(1000);
+						MyTeams(currentUser);
 						MainMenu(currentUser);
 						break;
 					case ConsoleKey.D2:
 					case ConsoleKey.NumPad2:
 						Console.Clear();
-						Console.Write("My Tasks"); Thread.Sleep(1000);
+						MyProjects(currentUser);
 						MainMenu(currentUser);
 						break;
 					case ConsoleKey.D3:
 					case ConsoleKey.NumPad3:
 						Console.Clear();
-						Console.Write("My Worklog"); Thread.Sleep(1000);
+						Console.Write("My Tasks"); Thread.Sleep(1000);
 						MainMenu(currentUser);
 						break;
 					case ConsoleKey.D4:
 					case ConsoleKey.NumPad4:
+						Console.Clear();
+						Console.Write("My Worklog"); Thread.Sleep(1000);
+						MainMenu(currentUser);
+						break;
+					case ConsoleKey.D5:
+					case ConsoleKey.NumPad5:
                         if (currentUser.Roles == 1)
                         {
 							Console.Clear();
@@ -787,8 +920,8 @@ namespace Manager
 						}
 						MainMenu(currentUser);
 						break;
-					case ConsoleKey.D5:
-					case ConsoleKey.NumPad5:
+					case ConsoleKey.D6:
+					case ConsoleKey.NumPad6:
 						if (currentUser.Roles == 1)
 						{
 							Console.Clear();
@@ -801,8 +934,8 @@ namespace Manager
 						}
 						MainMenu(currentUser);
 						break;
-					case ConsoleKey.D6:
-					case ConsoleKey.NumPad6:
+					case ConsoleKey.D7:
+					case ConsoleKey.NumPad7:
 						if (currentUser.Roles == 1)
 						{
 							Console.Clear();

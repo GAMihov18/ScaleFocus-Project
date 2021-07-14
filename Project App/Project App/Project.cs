@@ -93,9 +93,9 @@ namespace Manager
 			}
 			public void AssignTeam(Team team)
             {
-				SqlCommand cmd = new SqlCommand("UPDATE Projects SET TeamId = @teamid WHERE Id = @ID", connection);
-				cmd.Parameters.AddWithValue("@ID",id);
-				cmd.Parameters.AddWithValue("teamid", team.Id);
+				SqlCommand cmd = new SqlCommand("INSERT INTO TeamsProjects(TeamId, ProjectId) VALUES(@teamid,@projectid)", connection);
+				cmd.Parameters.AddWithValue("@teamid",team.Id);
+				cmd.Parameters.AddWithValue("@projectid", id);
 				cmd.ExecuteNonQuery();
             }
 
